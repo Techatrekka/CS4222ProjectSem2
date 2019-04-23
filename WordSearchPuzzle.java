@@ -1,108 +1,216 @@
+package com.company;
 
-import java.util.ArrayList ;
-import java.io.* ;
+import java.io.*;
+import java.util.*;
+import java.lang.*;
 
 public class WordSearchPuzzle {
 
-	private char[][] puzzle ;
-	private List<String> puzzleWords = new LinkedList<String>;
+    private char[][] puzzle;
+    private List<String> puzzleWords = new LinkedList<>();
+    private List<String> wordDetails = new LinkedList<>();
 
-	public WordSearchPuzzle(List<String> userSpecifiedWords) {
-		// puzzle generation using user specified words
-            // The user passes in a list of words to be used
-            // for generating the word search grid.
-	}
+    public WordSearchPuzzle(List<String> userSpecifiedWords) {
+        for (int i = 0; i < userSpecifiedWords.size(); i++)
+            puzzleWords.add(userSpecifiedWords.get(i).toUpperCase());
+        Collections.sort(puzzleWords);
+    }
 
-	public WordSearchPuzzle(String wordFile, int wordCount,
-                              int shortest, int longest)      {
-            try {
-                  FileReader aFileReader = new FileReader(wordFile);
-                  BufferedReader aBufferReader = new BufferedReader(aFileReader);
-                  String lineFromFile;
-                  ArrayList<String> words = new ArrayList<String>();
-                  lineFromFile = aBufferReader.readLine() ;
-                  while (lineFromFile != null) {  
-                        words.add(lineFromFile.toUpperCase());
-                        lineFromFile = aBufferReader.readLine() ;
-                  }
-                  aBufferReader.close();
-                  aFileReader.close();
-                  int rand;
-                  for (int i = 0; i < wordCount; i++) {
-                        rand = (int) (Math.Random() * 848 + 1);
-                        if ((words.get(rand)).length() >= shortest && (words.get(rand)).length() <= longest) {
-                              puzzleWords.add(words.get(rand));
+    public WordSearchPuzzle(String wordFile, int wordCount, int shortest, int longest) {
+        try {
+            FileReader aFileReader = new FileReader(wordFile);
+            BufferedReader aBufferReader = new BufferedReader(aFileReader);
+            String lineFromFile;
+            ArrayList<String> words = new ArrayList<>();
+            lineFromFile = aBufferReader.readLine();
+            while (lineFromFile != null) {
+                words.add(lineFromFile.toUpperCase());
+                lineFromFile = aBufferReader.readLine();
+            }
+            aBufferReader.close();
+            aFileReader.close();
+            int rand;
+            for (int i = 0; i < wordCount; i++) {
+                rand = (int) (Math.random() * 848);
+                if ((words.get(rand)).length() >= shortest && (words.get(rand)).length() <= longest && !(puzzleWords.contains(rand))) {
+                    puzzleWords.add(words.get(rand));
+                } else {
+                    i--;
+                }
+            }
+        } catch (IOException x) {
+            System.out.println("Error");
+        }
+        Collections.sort(puzzleWords);
+    }
+
+    public char[][] getPuzzleAsGrid() {
+        double sum = 0;
+        for (int i = 0; i < puzzleWords.size(); i++) {
+            sum += puzzleWords.get(i).length();
+        }
+        sum *= 4;
+        System.out.println("\nSum of length of words used * 4 = " + sum);
+        System.out.println("Square root of sum = " + Math.sqrt(sum));
+        sum = (Math.sqrt(sum));
+        int dimensions = (int) Math.ceil(sum);
+        System.out.println("Number of rows: " + dimensions);
+        System.out.println("Number of columns: " + dimensions);
+        puzzle = new char[dimensions][dimensions];
+        generateWordSearchPuzzle();
+        return puzzle;
+    }
+
+    public List<String> getWordSearchList() {
+        System.out.println("\nThe list of words used in the puzzle: ");
+        for (int i = 0; i < puzzleWords.size(); i++) {
+            System.out.println(puzzleWords.get(i));
+        }
+        return puzzleWords;
+    }
+
+    public String getPuzzleAsString() {
+        System.out.println("\nPuzzle as a string with unused positions filled with random characters: ");
+        String TheWholeLoad = "";
+        for (int i = 0; i < puzzle.length; i++) {
+            TheWholeLoad += puzzle[i];
+            System.out.println(puzzle[i]);
+        }
+        return TheWholeLoad;
+    }
+
+    public void showWordSearchPuzzle(boolean hide) {
+        if (hide) {
+            getPuzzleAsGrid();
+            getWordSearchList();
+        }
+        else{
+            getPuzzleAsGrid();
+            System.out.println("\nPuzzle words, showing their [row] [col] positions and directions: ");
+            for (int i = 0; i < wordDetails.size(); i ++)
+                System.out.println(wordDetails.get(i));
+        }
+    }
+
+    private void generateWordSearchPuzzle() {
+        int dimensions = puzzle.length;
+        HashMap<Integer, String> wordDirection = new HashMap<Integer, String>();
+        String[] Directions = {"Going Down", "Going Up", "Left to Right", "Right to Left"};
+        int direction;
+        for (int i = 0; i < puzzleWords.size(); i++) {
+            direction = (int) (Math.random() * 4);
+            wordDirection.put(i, Directions[direction]);
+        }
+        int startingCols, startRow, startCol, startingRows, counter;
+        for (int i = 0; i < puzzleWords.size(); i++) {
+            counter = 0;
+            String temp = puzzleWords.get(i);
+            int positionClear = 0;
+            startRow = 0;
+            startCol = 0;
+            boolean lineClear = false;
+            if (wordDirection.get(i) == "Left to Right" || wordDirection.get(i) == "Right to Left") {
+                startingCols = dimensions - temp.length();
+                //checks to see if there is anything in the way
+                while (!lineClear) {
+                    startRow = (int) (Math.random() * dimensions);
+                    startCol = (int) (Math.random() * startingCols);
+                    counter++;
+                    if (startCol + temp.length() >= dimensions) {
+                        startCol = (int) (Math.random() * startingCols);
+                    }
+                    for (int k = 0; k < temp.length(); k++) {
+                        if(puzzle[startRow][startCol + k] == 0) {
+                            positionClear++;
                         }
                         else {
-                              i--;
+                            positionClear = 0;
+                            break;
                         }
-                  }
-                  return puzzleWords;
+                        if (positionClear == temp.length()){
+                            lineClear = true;
+                        }
+                        else {
+                            lineClear = false;
+                        }
+                        if (counter > 250000) {
+                            break;
+                        }
+                    }
+                }
+            } else {
+                startingRows = dimensions - temp.length();
+                lineClear = false;
+                //checks to see if there is anything in the way
+                while (!lineClear) {
+                    startCol = (int) (Math.random() * dimensions);
+                    startRow = (int) (Math.random() * startingRows);
+                    counter++;
+                    if (startRow + temp.length() >= dimensions) {
+                        startRow = (int) (Math.random() * startingRows);
+                    }
+                    for (int k = 0; k < temp.length(); k++) {
+                        if (puzzle[startRow + k][startCol] == 0) {
+                            positionClear++;
+                        } else {
+                            positionClear = 0;
+                            break;
+                        }
+                        if (positionClear == temp.length()) {
+                            lineClear = true;
+                        } else {
+                            lineClear = false;
+                        }
+                        if (counter > 250000) {
+                            break;
+                        }
+                    }
+                }
             }
-            catch(IOException x) {
-                  return null ;
+            if (puzzleWords.size() > 0) {
+                switch (wordDirection.get(i)) {
+                    case "Left to Right":
+                        wordDetails.add(puzzleWords.get(i) + "[" + startRow + "][" + startCol + "]" + " " + wordDirection.get(i));
+                        for (int x = 0; x < temp.length(); x++) {
+                            puzzle[startRow][startCol + x] = temp.charAt(x);
+                        }
+                        break;
+                    case "Right to Left":
+                        wordDetails.add(puzzleWords.get(i) + "[" + startRow + "][" + (startCol + temp.length() - 1) + "]" + " " + wordDirection.get(i));
+                        for (int x = temp.length() - 1; x >= 0; x--) {
+                            puzzle[startRow][startCol + x] = temp.charAt(temp.length() - x - 1);
+                        }
+                        break;
+                    case "Going Up":
+                        wordDetails.add(puzzleWords.get(i) + "[" + (startRow + temp.length() - 1) + "][" + startCol + "]" + " " + wordDirection.get(i));
+                        for (int x = temp.length() - 1; x >= 0; x--) {
+                            puzzle[startRow + x][startCol] = temp.charAt(temp.length() - x - 1);
+                        }
+                        break;
+                    case "Going Down":
+                        wordDetails.add(puzzleWords.get(i) + "[" + startRow + "][" + startCol + "]" + " " + wordDirection.get(i));
+                        for (int x = 0; x < temp.length(); x++) {
+                            puzzle[startRow + x][startCol] = temp.charAt(x);
+                        }
+                        break;
+                }
             }
-
-		// puzzle generation using words from a file
-            // The user supplies the filename. In the file 
-            // the words should appear one per line.
-            // The wordCount specifies the number of words
-            // to (randomly) select from the file for use in
-            // the puzzle.
-            // shortest and longest specify the shortest
-            // word length to be used and longest specifies
-            // the longest word length to be used.
-            // SO, using the words in the file randomly select
-            // wordCount words with lengths between shortest
-            // and longest.
-
-	}
-
-      // The dimensions of the puzzle grid should be set
-      // by summing the lengths of the words being used in the
-      // puzzle and multiplying the sum by 1.5 or 1.75
-      // or some other (appropriate) scaling factor to
-      // ensure that the grid will have enough additional
-      // characters to obscure the puzzle words. Once
-      // you have calculated how many characters you are
-      // going to have in the grid you can calculate the
-      // grid dimensions by getting the square root (rounded up)
-      // of the character total.
-	//
-      // You will also need to add the methods specified below
-
-//Methods Required
-//The class should support/provide the following operations
-//The class provides an operation that returns the list of words used in the puzzle. The header is as follows
-public List<String> getWordSearchList() {}
-
-//The class provides an operation that returns the generated grid as a two-dimensional array of characters. The header is as follows
-public char[][] getPuzzleAsGrid() {
-      int sum = 0;
-      for (int i = 0; i < puzzleWords.size(); i++) {
-            sum += (puzzleWords.get(i)).size();
-      }
-      sum *= 1.75;
-      sum = Math.sqrt(sum);
-      int dimensions = (int) (Math.ceil(sum));
-      puzzle = new char[dimensions][dimensions];
-
-}
-
-//The class provides an operation that returns the generated grid as a String with newlines (i.e. \n) at the end of each line/row of the grid. The header is as follows
-public String getPuzzleAsString() {}
-
-//The class provides an operation that displays the grid and the list of words used to create it. The header is as follows
-public void showWordSearchPuzzle(boolean hide){}
-
-//If the hide parameter is false the grid display should include details of where each word is located on the grid AND the orientation used to place it on the grid (i.e. left to right horizontally, top down vertically, right to left horizontally, and so on). If the hide parameter is true then only the words placed on the grid should be displayed and the word location information should be suppressed. (See examples below. NOTE: They are examples – feel free to design your own grid display layout.)
-//    The class should include a private method with the following header
-private void generateWordSearchPuzzle() {}
-/*This method is responsible for implementing the creation of the puzzle by coordinating the following operations
-1.    If a list of words has not been supplied by the user then you need to select the words to be used in the puzzle from the dictionary specified by the user. Remember, the number of words to be used and the lengths of the longest and shortest words allowable are passed to the constructor.
-2.    Randomly place each word on the grid. Placing a word involves selecting a position (i.e. a row and column pair) and a direction (i.e. horizontal left to right, horizontal right to left, vertical top to bottom, vertical bottom to top). The selected position and direction should have sufficient empty positions to allow the word to be placed (i.e. you cannot overwrite a word already placed). The word can be placed on to the grid by placing each individual character in the appropriate grid position (as determined by the direction). 
-3.    When all the words have been placed you should fill any remaining grid positions with randomly chosen letters.
-4.    It is NOT A REQUIREMENT but you may want to allow interlocking words on the grid. Please note, this makes the project more interesting or challenging or demanding but you might like to consider it anyway. There are NO MARKS for adding an interlocking words feature. In addition, you could introduce “diagonal” word placement (i.e. top-left to bottom right, bottom-left to top-right, and so on).
-5.    It is entirely a matter for you as the designer of the solution to use any additional methods YOU feel are necessary to solve the problem.
-*/
+        }
+        char[] alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+        for (int i = 0; i < dimensions; i++) {
+            for (int j = 0; j < dimensions; j++) {
+                if (puzzle[i][j] == 0) {
+                    int rand = (int) (Math.random() * 26);
+                    puzzle[i][j] = alphabet[rand];
+                }
+            }
+        }
+        System.out.println("\nThe puzzle in grid form:\n");
+        for(int i = 0; i < dimensions; i ++) {
+            for (int j = 0; j < dimensions; j++) {
+                System.out.print(puzzle[i][j] + " ");
+            }
+            System.out.println();
+        }
+    }
 }
