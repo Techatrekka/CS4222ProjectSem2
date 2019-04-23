@@ -1,9 +1,42 @@
+package com.company;
 
+import java.io.IOException;
+import java.nio.file.*;
+import java.util.*;
 
 public class Driver {
 
-	public static void main(String[]     args) {
-		WordSearchPuzzle wordSearch = new WordSearchPuzzle("UserGeneratedWords.txt", 10, 3, 8)
-		
-	}
+    //Test case 1, boolean hide is true in showWordSearchPuzzle
+    private static void test1() {
+        WordSearchPuzzle WordSearch = new WordSearchPuzzle("UserGeneratedWords.txt", 7, 3, 8);
+        System.out.println("Puzzle without details of word location and orientation: ");
+        WordSearch.showWordSearchPuzzle(true) ;
+        WordSearch.getPuzzleAsString();
+        System.out.println();
+    }
+
+    //Test case 2, boolean hide is false in showWordSearchPuzzle
+    private static void test2() {
+        WordSearchPuzzle WordSearch = new WordSearchPuzzle(readFromFile());
+        System.out.println("Puzzle with details of word location and orientation: ");
+        WordSearch.getWordSearchList(); // display the list of words used in the puzzle
+        WordSearch.showWordSearchPuzzle(false); // display the puzzle and list of words used to create it
+        WordSearch.getPuzzleAsString();
+        System.out.println();
+    }
+
+    //Main driver method
+    public static void main(String[] args) {
+        Driver.test1();
+        Driver.test2();
+    }
+
+    public static List<String> readFromFile() {
+        List<String> words = new LinkedList<>();
+        try {
+            words = Files.readAllLines(Paths.get("UserSpecifiedWords.txt"));
+        } catch(IOException x){
+        }
+        return words;
+    }
 }
